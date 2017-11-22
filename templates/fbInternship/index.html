@@ -1,0 +1,45 @@
+{% extends "fbInternship/base.html" %}
+
+{% block title %}Inernship Challenge - Hiddenfounders.com{% endblock %}
+
+{% block content %}
+  <div class="login-content">
+    <button id="login" class="waves-effect waves-light btn btn-large indigo darken-2" onclick="login()">Login With facebook</button>
+  </div>
+{% endblock %}
+
+{% block js %}
+<script>
+  // login with facebook with extra permissions
+  function login() {
+    FB.login(function(response) {
+      if (response.status === 'connected') {
+        $('#login').hide();
+        document.cookie = "accesstoken="+response.authResponse.accessToken+";path=/";
+        window.location = "/album";
+      } else {
+        console.log('You are not logged into Facebook.');
+      }
+    }, {scope: 'public_profile,email'});
+  }
+
+  $(document).ready(function(){
+    // init the Facebook js sdk with jquery
+    $.ajaxSetup({ cache: true });
+    $.getScript('//connect.facebook.net/en_US/sdk.js', function() {
+      FB.init({
+        appId: '949664218517703',
+        cookie: true,
+        status: true,
+        version: 'v2.11'
+      });
+      FB.AppEvents.logPageView();
+      if (getCookie("accesstoken") && getCookie("accesstoken").length > 10) {
+        FB.getLoginStatus(function (response) {
+          window.location = "/album";
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}{% endblock %}</title>
+  <!-- materialize framework-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
+  <!-- materialize framework-->
+  {% load staticfiles %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<div class="all-content">
+  {% block content %}
+  {% endblock %}
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+<script>
+  // A function that returns the value of a cookie with name 'cname'
+  function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+  // logout function
+  function logout() {
+    FB.getLoginStatus(function(response) {
+      if (response.status === "connected") {
+        FB.logout(function(response) {
+          document.cookie = "accesstoken=";
+          document.location.reload();
+        });
+      } else {
+        document.cookie = "accesstoken=";
+        window.location = "/";
+      }
+    });
+  }
+</script>
+{% block js %}
+{% endblock %}
+</body>
+</html>

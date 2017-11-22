@@ -1,0 +1,16 @@
+body {
+    background-color: #f2f2f2;
+    overflow-x: hidden;
+}
+.all-content {
+    width: 80%;
+    min-width: 400px;
+    margin: 0 auto;
+    height: 100vh;
+}
+.login-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}

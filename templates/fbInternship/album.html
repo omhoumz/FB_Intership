@@ -1,0 +1,75 @@
+{% extends "fbInternship/base.html" %}
+
+{% block title %}Albums{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col">
+      <button class="btn" onclick="logout()">Logout</button>
+      <button class="btn" id="getalbums" onclick="getAlbums()">Get Albums</button>
+      <div class="chip hoverable" id="info-card" style="display: none; margin-left: 20px;">
+        <img id="profile-pic" src="" alt="User's profile pic">
+        <span id="name"></span>
+        <span id="card-action"></span>
+      </div>
+    </div>
+  </div>
+  <div id="allalbums" class="row"></div>
+{% endblock %}
+
+{% block js %}
+  <script>
+    $(document).ready(function(){
+      $.ajaxSetup({ cache: true });
+      $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
+        FB.init({
+          appId: '949664218517703',
+          cookie: true,
+          status: true,
+          version: 'v2.11'
+        });
+        FB.AppEvents.logPageView();
+        // Get info on user
+        if (getCookie("accesstoken") && getCookie("accesstoken").length > 10) {
+          FB.api('/me?access_token=' + getCookie("accesstoken"), 'GET', {fields: 'name,id,picture.width(700).height(700)'}, function (response) {
+            if (response && !response.error) {
+              document.getElementById("profile-pic").src = response.picture.data.url;
+              document.getElementById("name").innerText = response.name;
+              document.getElementById("card-action").innerHTML = '<a href="https://www.facebook.com/' + response.id + '" target="_blank" >Go to FB</a>';
+              document.getElementById("info-card").style.display = "inline-block";
+            } else {
+              console.log("Response Error. info");
+              console.log(response.error);
+            }
+          });
+        } else {
+          FB.getLoginStatus(function (response) {
+            if (response.status !== "connected") {
+              window.location = "/";
+            }
+          });
+        }
+        // load albums
+        FB.api('/me/albums?access_token='+getCookie("accesstoken"), 'GET', {"fields": "cover_photo,link"}, function(response) {
+          if (response && !response.error) {
+            for (i=0; i < response.data.length; i++) {
+              document.cookie = "idCookie="+response.data[i].id;
+              if (response.data[i].cover_photo) {
+                // if the albums has a cover photo
+                FB.api('/' + response.data[i].cover_photo.id + '?access_token='+getCookie("accesstoken"), 'GET', {"fields": "images"}, function (response) {
+                  var pic = '<div class="col s12 m4 photo photo' + i + '"><div class="image"><a href="#!" class="modal-trigger"><img src="' + response.images[0].source + '"/></a></div></div>';
+                  $("#allalbums").append(pic);
+                });
+              } else {
+                // if the album has no photos
+                var pic = '<div class="col s12 m4 photo photo' + i + '"><div class="image"><a href="#!" class="modal-trigger"><img src="http://via.placeholder.com/450x450?text=no+image+available+in+this+album"/></a></div></div>';
+                $("#allalbums").append(pic);
+              }
+            }
+          }
+          $('#getalbums').hide();
+        });
+      });
+    });
+  </script>
+{% endblock %}
