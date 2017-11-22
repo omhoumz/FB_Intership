@@ -1,4 +1,4 @@
 # HF FB Intership
 A challange that was accepted
 
-How to comming soon
+The How to? is coming soon!
