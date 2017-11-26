@@ -124,6 +124,7 @@
         // empty photos container
         $('#modal1 .modal-content #album-photos').empty();
         if (response && !response.error) {
+
           if (response.data[0]) {
             // if no error and there id data, loop through album photos
             var desc = '';
