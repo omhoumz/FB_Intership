@@ -3,10 +3,11 @@
 {% block title %}Albums{% endblock %}
 
 {% block content %}
-  <div class="row">
+  <!-- Info and Action photos container -->
+  <div class="row info">
     <div class="col">
       <button class="btn" onclick="logout()">Logout</button>
-      <button class="btn" id="getalbums" onclick="getAlbums()">Get Albums</button>
+      <button class="btn" id="getalbums" onclick="getalbums()">Get Albums</button>
       <div class="chip hoverable" id="info-card" style="display: none; margin-left: 20px;">
         <img id="profile-pic" src="" alt="User's profile pic">
         <span id="name"></span>
@@ -14,12 +15,29 @@
       </div>
     </div>
   </div>
-  <div id="allalbums" class="row"></div>
+  <!-- Album photos container-->
+  <div id="allalbums" class="row allalbums"></div>
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal modal-fixed-footer">
+    <div class="modal-content">
+      <h4>Album Photos</h4>
+      <p></p>
+      <div id="album-photos"></div>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat ">Close</a>
+    </div>
+  </div>
 {% endblock %}
 
 {% block js %}
   <script>
+    // Access token from Cookies set upon login
+    var ACCESSTOKEN = '?access_token='+getCookie("accesstoken");
     $(document).ready(function(){
+      // modal init (materialize framework)
+      $('.modal').modal();
+      // FB api init with jquery
       $.ajaxSetup({ cache: true });
       $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
         FB.init({
@@ -31,45 +49,108 @@
         FB.AppEvents.logPageView();
         // Get info on user
         if (getCookie("accesstoken") && getCookie("accesstoken").length > 10) {
+          // if user is connected or at least the cookie is set
           FB.api('/me?access_token=' + getCookie("accesstoken"), 'GET', {fields: 'name,id,picture.width(700).height(700)'}, function (response) {
             if (response && !response.error) {
-              document.getElementById("profile-pic").src = response.picture.data.url;
-              document.getElementById("name").innerText = response.name;
-              document.getElementById("card-action").innerHTML = '<a href="https://www.facebook.com/' + response.id + '" target="_blank" >Go to FB</a>';
-              document.getElementById("info-card").style.display = "inline-block";
+              $("#profile-pic").attr("src", response.picture.data.url);
+              $("#name").text(response.name);
+              $("#card-action").html('<a href="https://www.facebook.com/' + response.id + '" target="_blank" >Go to FB</a>');
+              $("#info-card").css('display', 'inline-block');
             } else {
               console.log("Response Error. info");
               console.log(response.error);
             }
           });
         } else {
+          // if user is not connected or at least the cookie is not set
           FB.getLoginStatus(function (response) {
             if (response.status !== "connected") {
               window.location = "/";
             }
           });
         }
-        // load albums
-        FB.api('/me/albums?access_token='+getCookie("accesstoken"), 'GET', {"fields": "cover_photo,link"}, function(response) {
-          if (response && !response.error) {
-            for (i=0; i < response.data.length; i++) {
-              document.cookie = "idCookie="+response.data[i].id;
-              if (response.data[i].cover_photo) {
-                // if the albums has a cover photo
-                FB.api('/' + response.data[i].cover_photo.id + '?access_token='+getCookie("accesstoken"), 'GET', {"fields": "images"}, function (response) {
-                  var pic = '<div class="col s12 m4 photo photo' + i + '"><div class="image"><a href="#!" class="modal-trigger"><img src="' + response.images[0].source + '"/></a></div></div>';
-                  $("#allalbums").append(pic);
-                });
-              } else {
-                // if the album has no photos
-                var pic = '<div class="col s12 m4 photo photo' + i + '"><div class="image"><a href="#!" class="modal-trigger"><img src="http://via.placeholder.com/450x450?text=no+image+available+in+this+album"/></a></div></div>';
-                $("#allalbums").append(pic);
-              }
-            }
-          }
-          $('#getalbums').hide();
-        });
+        // After getting info, get all albums
+        getalbums();
       });
     });
+    function getalbums() {
+      // load albums
+      FB.api('/me/albums' + ACCESSTOKEN, 'GET', {"fields": "cover_photo,link,name"}, function(response) {
+        if (response && !response.error) {
+          // if no error, loop through the data array
+          for (i = 0; i < response.data.length; i++) {
+            // set the container div
+            var album_container = '<div class="col s12 m4 photo photo' + i + '">' +
+                '<div class="info-photo">'+response.data[i].name+'</div>' +
+                '</div>';
+            // append the div to the container
+            $("#allalbums").append(album_container);
+
+            if (response.data[i].cover_photo) {
+              // if the albums has a cover photo, fetch it
+              get_cover_photo(response.data[i].cover_photo.id, response.data[i].id, 'photo' + i);
+            } else {
+              // if the album has no photos, set a placeholder
+              add_photo("http://via.placeholder.com/450x450?text=no+image+available+in+this+album", response.data[i].id, 'photo' + i);
+            }
+          }
+        } else {
+          // if there is an error
+          console.log("There Was An Error while Querying the data!");
+        }
+
+        // if all the albums got loaded hide the action button
+        $('#getalbums').hide();
+      });
+    }
+    function get_cover_photo(photo_id, album_id, className) {
+      // fetch a photo with an id of photo_id
+      FB.api('/'+ photo_id + ACCESSTOKEN, 'GET', {"fields": "images"}, function (response) {
+        if (response && !response.error){
+          // if no error, set the source image
+          add_photo(response.images[0].source, album_id, className);
+        }
+      });
+    }
+    function add_photo(image_source, album_id, className) {
+      // set the source image (image_source) of the album (album_id) to a div className
+      // while setting the onclick event to get_all_photos() with album_id as an arg
+      pic = '<div class="image"><a href="#modal1" onclick="get_all_photos('+album_id+')" class="modal-trigger"><img src="' + image_source + '"/></a></div>';
+      $('.'+className).prepend(pic);
+    }
+    function get_all_photos(album_id) {
+      // fetch all photos of an album (album_id)
+      FB.api('/'+ album_id + '/photos' + ACCESSTOKEN, 'GET', {"fields": "name,images"}, function (response) {
+        // empty photos container
+        $('#modal1 .modal-content #album-photos').empty();
+        if (response && !response.error) {
+          if (response.data[0]) {
+            // if no error and there id data, loop through album photos
+            var desc = '';
+            $('#modal1 .modal-content p').text('');
+            for (i in response.data){
+              if (response.data[0].name) {
+                // if there a photo description or 'name'
+                desc = response.data[0].name;
+              }
+              // append images (highest quality) to the modal
+              add_photos_to_modal(response.data[i].images[0].source, desc);
+            }
+          } else {
+            // if no data
+            $('#modal1 .modal-content p').text("This album has no photos available!");
+          }
+        } else {
+          // if error
+          $('#modal1 .modal-content p').text("There Was An Error while Querying the data!");
+          console.log(response.error);
+        }
+      });
+    }
+    function add_photos_to_modal(photo_link, text) {
+      // setting an image sources with desc
+      var pic = '<br><br><p>'+text+'</p><img src="'+ photo_link +'" width="100%" />';
+      $('#modal1 .modal-content #album-photos').append(pic);
+    }
   </script>
 {% endblock %}
