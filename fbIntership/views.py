@@ -6,4 +6,4 @@ def index(request):
 
 
 def album(request):
-    return render(request, 'fbInternship/album.html', {'title': "usah"})
+    return render(request, 'fbInternship/album.html')

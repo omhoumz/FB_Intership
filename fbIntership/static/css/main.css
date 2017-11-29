@@ -23,6 +23,10 @@ body {
 .all-content .chip.hoverable {
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.11), 0 3px 8px 0 rgba(0, 0, 0, 0.1);
 }
+.inner-content > button {
+    display: block;
+    margin: 0 auto;
+}
 .photo {
     margin-bottom: 5%;
 }

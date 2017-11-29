@@ -119,20 +119,21 @@
       $('.'+className).prepend(pic);
     }
     function get_all_photos(album_id) {
+      // empty photos container
+      $('#modal1 .modal-content #album-photos').empty();
       // fetch all photos of an album (album_id)
       FB.api('/'+ album_id + '/photos' + ACCESSTOKEN, 'GET', {"fields": "name,images"}, function (response) {
-        // empty photos container
-        $('#modal1 .modal-content #album-photos').empty();
         if (response && !response.error) {
-
+          // if no error and there is data, loop through album photos
           if (response.data[0]) {
-            // if no error and there id data, loop through album photos
-            var desc = '';
+            var desc;
             $('#modal1 .modal-content p').text('');
             for (i in response.data){
-              if (response.data[0].name) {
+              if (response.data[i].name) {
                 // if there a photo description or 'name'
-                desc = response.data[0].name;
+                desc = response.data[i].name;
+              } else {
+                desc = '';
               }
               // append images (highest quality) to the modal
               add_photos_to_modal(response.data[i].images[0].source, desc);
