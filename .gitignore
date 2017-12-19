@@ -1,0 +1,5 @@
+.idea/
+db.sqlite3
+fbIntership/__pycache__/
+fbIntership/migrations/__pycache__/
+FB_Intership/__pycache__/
