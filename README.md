@@ -6,7 +6,7 @@ How to basics:
 2. And (latest version) django in your environment
 3. Clone the repo and cd to it
 4. Run the test server with "python manage.py runserver"
-5. Navigate to localhost:port (from the previous command)
+5. Navigate to localhost:port (default port is 8000, else see the previous command, do not use 127.0.0.1) 
 6. Give permissions to the app, if albums don't show see #7, else see #8
 7. You have to give the permissions manually since the app is not public yet
     1. Navigate to https://developers.facebook.com/tools/explorer/949664218517703
